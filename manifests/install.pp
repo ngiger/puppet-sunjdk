@@ -57,6 +57,9 @@ define sunjdk::install (
     }
   }
   if $default {
+    if defined(File['/usr/java/latest']) {
+      fail('Only one sunjdk version can be the default')
+    }
     file { '/usr/java/latest':
       ensure      => link,
       target      => "/usr/java/${version}",
