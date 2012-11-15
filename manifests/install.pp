@@ -1,25 +1,71 @@
-class sunjdk::install (
-  $workspace = undef
+define sunjdk::install (
+  $filename  = undef,
+  $default   = false
 ) {
-  if $workspace == undef {
-    fail('sunjdk::install workspace parameter is required')
+  $version = $name
+  if $filename == undef {
+    fail('sunjdk filename must be set')
   }
-  file { 'jdk-rpm':
+  file { "/root/sunjdk/${filename}":
     ensure  => file,
-    path    => "${workspace}/jdk-7u7-linux-x64.rpm",
-    source  => 'puppet:///files/jdk-7u7-linux-x64.rpm',
-    require => File[$workspace],
+    source  => "puppet:///files/${filename}",
+    require => File['/root/sunjdk'],
   }
-  package { 'jdk':
-    ensure   => installed,
-    provider => 'rpm',
-    source   => "${workspace}/jdk-7u7-linux-x64.rpm",
-    require  => File['jdk-rpm'],
-  }
-  exec { 'update-alternatives':
-    command     => "${workspace}/update-alternatives.sh",
-    require     => Class['sunjdk::config'],
-    subscribe   => Package['jdk'],
+  exec { "chown-${version}":
+    command     => "/bin/chown -R root:root /usr/java/${version}",
     refreshonly => true,
+  }
+  case $filename {
+    #/.rpm$/: {
+    #  package { $filename:
+    #    ensure   => installed,
+    #    provider => 'rpm',
+    #    source   => "/root/sunjdk/${filename}",
+    #    require  => File["/root/sunjdk/${filename}"],
+    #    notify  => Exec["chown-${version}"],
+    #  }
+    #}
+    #/-rpm.bin$/: {
+    #  exec { "jdk-rpm-bin-${filename}":
+    #    cwd     => '/root/sunjdk',
+    #    command => "/bin/bash /root/sunjdk/${filename} -noregister",
+    #    creates => "/usr/java/${version}",
+    #    require => File["/root/sunjdk/${filename}"],
+    #    notify  => Exec["chown-${version}"],
+    #  }
+    #}
+    /.bin$/: {
+      exec { "jdk-bin-${filename}":
+        cwd     => '/usr/java',
+        command => "/bin/bash /root/sunjdk/${filename} -noregister",
+        creates => "/usr/java/${version}",
+        require => File["/root/sunjdk/${filename}"],
+        notify  => Exec["chown-${version}"],
+      }
+    }
+    /.gz$/: {
+      exec { "jdk-tar-gz-${filename}":
+        cwd     => '/usr/java',
+        command => "/bin/tar -zxf /root/sunjdk/${filename}",
+        creates => "/usr/java/${version}",
+        require => File["/root/sunjdk/${filename}"],
+        notify  => Exec["chown-${version}"],
+      }
+    }
+    default: {
+      fail('unknown file suffix')
+    }
+  }
+  if $default {
+    file { '/usr/java/latest':
+      ensure      => link,
+      target      => "/usr/java/${version}",
+      notify      => Exec['sunjdk-update-alternatives'],
+    }
+    exec { 'sunjdk-update-alternatives':
+      command     => '/root/sunjdk/update-alternatives.sh',
+      require     => Class['sunjdk::config'],
+      refreshonly => true,
+    }
   }
 }

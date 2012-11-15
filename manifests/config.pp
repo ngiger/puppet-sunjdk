@@ -1,14 +1,9 @@
-class sunjdk::config (
-  $workspace = undef
-) {
-  if $workspace == undef {
-    fail('sunjdk::config workspace parameter is required')
-  }
-  file { "${workspace}/update-alternatives.sh":
+class sunjdk::config {
+  file { '/root/sunjdk/update-alternatives.sh':
     ensure  => present,
     mode    => '0555',
     source  => 'puppet:///modules/sunjdk/update-alternatives.sh',
-    require => File[$workspace],
+    require => File['/root/sunjdk'],
   }
   file { '/etc/profile.d/java.sh':
     ensure => present,

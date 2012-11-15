@@ -1,14 +1,19 @@
 class sunjdk (
-  $workspace = '/root/sunjdk'
+  $config = {},
 ) {
-  file { $workspace:
+  file { '/root/sunjdk':
     ensure => directory
   }
-  class { 'sunjdk::config':
-    workspace => $workspace,
+  file { '/usr/java':
+    ensure  => directory,
+    mode    => '0755',
+    owner   => 'root',
+    group   => 'root',
   }
-  class { 'sunjdk::install':
-    workspace => $workspace,
+  include ::sunjdk::config
+  $versions = hiera_hash('sunjdk::versions', $config['versions'])
+  class { '::sunjdk::versions':
+    config => $versions,
   }
-  include sunjdk::check
+  include ::sunjdk::check
 }
