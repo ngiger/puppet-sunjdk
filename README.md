@@ -1,8 +1,8 @@
-= puppet-sunjdk
+# puppet-sunjdk
 
 Install the Sun (Oracle) JDK under /usr/java from a tarball.
 
-== Usage
+## Usage
 
 Include the sunjdk module in your puppet configuration:
 
