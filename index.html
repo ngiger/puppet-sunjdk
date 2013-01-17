@@ -32,6 +32,29 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h1>puppet-sunjdk</h1>
+
+<p>Install the Sun (Oracle) JDK under /usr/java from a tarball.</p>
+
+<h2>Usage</h2>
+
+<p>Include the sunjdk module in your puppet configuration:</p>
+
+<pre><code>include sunjdk
+</code></pre>
+
+<p>and add required hiera configuration - for example:</p>
+
+<pre><code>sunjdk::versions:
+  jdk1.7.0_09:
+    filename: 'jdk-7u9-linux-x64.tar.gz'
+    default: true
+</code></pre>
+
+<h2>Support</h2>
+
+<p>License: Apache License, Version 2.0</p>
+
+<p>GitHub URL: <a href="http://erwbgy.github.com/puppet-sunjdk">http://erwbgy.github.com/puppet-sunjdk</a></p>
       </section>
     </div>
 
