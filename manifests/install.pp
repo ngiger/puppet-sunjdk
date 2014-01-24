@@ -1,15 +1,27 @@
 define sunjdk::install (
   $filename  = undef,
-  $default   = false
+  $default   = false,
+  $download_from_oracle = true,
 ) {
   $version = $name
   if $filename == undef {
     fail('sunjdk filename must be set')
   }
-  file { "/root/sunjdk/${filename}":
+
+  if ($download_from_oracle) {
+		exec{"/root/sunjdk/${filename}":
+			creates => "/root/sunjdk/${filename}",
+			cwd     => "/root/sunjdk/",
+			command => "/usr/bin/wget --no-cookies --no-check-certificate --header 'Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F' http://download.oracle.com/otn-pub/java/jdk/${filename}",
+		}
+		$jdk_requires = Exec["/root/sunjdk/${filename}"]
+	} else {
+    file { "/root/sunjdk/${filename}":
     ensure  => file,
     source  => "puppet:///files/${filename}",
     require => File['/root/sunjdk'],
+    }
+		$jdk_requires = File["/root/sunjdk/${filename}"]
   }
   exec { "chown-${version}":
     command     => "/bin/chown -R root:root /usr/java/${version}",
@@ -21,7 +33,7 @@ define sunjdk::install (
     #    ensure   => installed,
     #    provider => 'rpm',
     #    source   => "/root/sunjdk/${filename}",
-    #    require  => File["/root/sunjdk/${filename}"],
+    #    require  => $jdk_requires,
     #    notify  => Exec["chown-${version}"],
     #  }
     #}
@@ -30,7 +42,7 @@ define sunjdk::install (
     #    cwd     => '/root/sunjdk',
     #    command => "/bin/bash /root/sunjdk/${filename} -noregister",
     #    creates => "/usr/java/${version}",
-    #    require => File["/root/sunjdk/${filename}"],
+    #    require => $jdk_requires,
     #    notify  => Exec["chown-${version}"],
     #  }
     #}
@@ -39,7 +51,7 @@ define sunjdk::install (
         cwd     => '/usr/java',
         command => "/bin/bash /root/sunjdk/${filename} -noregister",
         creates => "/usr/java/${version}",
-        require => File["/root/sunjdk/${filename}"],
+        require => $jdk_requires,
         notify  => Exec["chown-${version}"],
       }
     }
@@ -48,7 +60,7 @@ define sunjdk::install (
         cwd     => '/usr/java',
         command => "/bin/tar -zxf /root/sunjdk/${filename}",
         creates => "/usr/java/${version}",
-        require => File["/root/sunjdk/${filename}"],
+        require => $jdk_requires,
         notify  => Exec["chown-${version}"],
       }
     }
